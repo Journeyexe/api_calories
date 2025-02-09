@@ -1,35 +1,35 @@
-import Food from "../models/foodModel.js";
+import Ingredient from "../models/ingredientModel.js";
 import { logger } from "../config/logger.js";
 
-export const foodController = {
-  async getAllFood(req, res, next) {
+export const ingredientController = {
+  async getAllIngredient(req, res, next) {
     try {
-      const foods = await Food.find().select("-__v");
+      const ingredients = await Ingredient.find().select("-__v");
 
       // Inclui caloriesFromFat virtual no response
-      const foodsWithVirtuals = foods.map((food) => ({
-        ...food.toObject({ virtuals: true }),
-        nutritionSummary: food.getNutritionSummary(),
+      const ingredientsWithVirtuals = ingredients.map((ingredient) => ({
+        ...ingredient.toObject({ virtuals: true }),
+        nutritionSummary: ingredient.getNutritionSummary(),
       }));
 
       res.status(200).json({
         success: true,
-        count: foods.length,
-        data: foodsWithVirtuals,
+        count: ingredients.length,
+        data: ingredientsWithVirtuals,
       });
     } catch (error) {
       next(error);
     }
   },
 
-  async createFood(req, res, next) {
+  async createIngredient(req, res, next) {
     try {
-      const food = await Food.create(req.body);
+      const ingredient = await Ingredient.create(req.body);
 
       // Inclui informações adicionais no response
       const response = {
-        ...food.toObject({ virtuals: true }),
-        nutritionSummary: food.getNutritionSummary(),
+        ...ingredient.toObject({ virtuals: true }),
+        nutritionSummary: ingredient.getNutritionSummary(),
       };
 
       res.status(201).json({
@@ -49,18 +49,18 @@ export const foodController = {
   },
 
   // Método adicional para buscar por faixa de calorias
-  async getFoodByCaloriesRange(req, res, next) {
+  async getIngredientByCaloriesRange(req, res, next) {
     try {
       const { min, max } = req.query;
-      const foods = await Food.findByCaloriesRange(
+      const ingredients = await Ingredient.findByCaloriesRange(
         parseInt(min) || 0,
         parseInt(max) || 1000
       );
 
       res.status(200).json({
         success: true,
-        count: foods.length,
-        data: foods,
+        count: ingredients.length,
+        data: ingredients,
       });
     } catch (error) {
       next(error);

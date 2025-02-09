@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import "dotenv/config";
 import { connectDB } from "./config/database.js";
-import { router as foodRoutes } from "./routes/foodRoutes.js";
+import { router as ingredientRoutes } from "./routes/ingredientRoutes.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { logger } from "./config/logger.js";
 
@@ -18,7 +18,7 @@ app.use(cors({
 }));
 
 // Routes
-app.use("/api/foods", foodRoutes);
+app.use("/api/ingredients", ingredientRoutes);
 
 // Error handling
 app.use(errorHandler);

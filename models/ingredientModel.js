@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import timestamps from "mongoose-timestamp";
 import sanitize from "mongoose-sanitize";
 
-const foodSchema = new Schema({
+const ingredientSchema = new Schema({
   name: {
     type: String,
     required: [true, "Name is required"],
@@ -48,32 +48,32 @@ const foodSchema = new Schema({
 });
 
 // Add timestamps plugin
-foodSchema.plugin(timestamps);
+ingredientSchema.plugin(timestamps);
 
 // Add sanitize plugin
-foodSchema.plugin(sanitize);
+ingredientSchema.plugin(sanitize);
 
 // Pre-save hook to normalize name
-foodSchema.pre("save", function (next) {
+ingredientSchema.pre("save", function (next) {
   this.name = this.name.trim().toLowerCase();
   next();
 });
 
 // Static method to find food by calories range
-foodSchema.statics.findByCaloriesRange = function (min, max) {
+ingredientSchema.statics.findByCaloriesRange = function (min, max) {
   return this.find({ calories: { $gte: min, $lte: max } });
 };
 
 // Instance method to get nutrition summary
-foodSchema.methods.getNutritionSummary = function () {
+ingredientSchema.methods.getNutritionSummary = function () {
   return `Name: ${this.name}, Calories: ${this.calories}, Protein: ${this.protein}g, Carbs: ${this.carbohydrate}g, Total Fat: ${this.totalFat}g, Saturated Fat: ${this.saturatedFat}g, Fiber: ${this.fiber}g, Sodium: ${this.sodium}g`;
 };
 
 // Virtual for calories from fat
-foodSchema.virtual("caloriesFromFat").get(function () {
+ingredientSchema.virtual("caloriesFromFat").get(function () {
   return this.totalFat * 9; // 9 calories per gram of fat
 });
 
-const Food = mongoose.model("Food", foodSchema);
+const Ingredient = mongoose.model("Ingredient", ingredientSchema);
 
-export default Food;
+export default Ingredient;
