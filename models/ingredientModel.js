@@ -66,7 +66,7 @@ ingredientSchema.statics.findByCaloriesRange = function (min, max) {
 
 // Instance method to get nutrition summary
 ingredientSchema.methods.getNutritionSummary = function () {
-  return `Name: ${this.name}, Calories: ${this.calories}, Protein: ${this.protein}g, Carbs: ${this.carbohydrate}g, Total Fat: ${this.totalFat}g, Saturated Fat: ${this.saturatedFat}g, Fiber: ${this.fiber}g, Sodium: ${this.sodium}g`;
+  return `Name: ${this.name}, Calories: ${this.calories}, Protein: ${this.protein}g, Carbs: ${this.carbohydrate}g, Total Fat: ${this.totalFat}g, Saturated Fat: ${this.saturatedFat}g, Fiber: ${this.fiber}g, Sodium: ${this.sodium}mg`;
 };
 
 // Virtual for calories from fat

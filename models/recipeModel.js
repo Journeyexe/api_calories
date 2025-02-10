@@ -23,39 +23,36 @@ const recipeSchema = new Schema({
     required: [true, "Name is required"],
     trim: true,
   },
+  recipeWeight: {
+    type: Number,
+    min: [0, "Weight must be at least 0"],
+  },
   calories: {
     type: Number,
-    required: [true, "Calories are required"],
     min: [0, "Calories must be at least 0"],
   },
   carbohydrate: {
     type: Number,
-    required: [true, "Carbohydrate is required"],
     min: [0, "Carbohydrate must be at least 0"],
   },
   protein: {
     type: Number,
-    required: [true, "Protein is required"],
     min: [0, "Protein must be at least 0"],
   },
   totalFat: {
     type: Number,
-    required: [true, "Total Fat is required"],
     min: [0, "Total Fat must be at least 0"],
   },
   saturatedFat: {
     type: Number,
-    required: [true, "Saturated Fat is required"],
     min: [0, "Saturated Fat must be at least 0"],
   },
   fiber: {
     type: Number,
-    required: [true, "Fiber is required"],
     min: [0, "Fiber must be at least 0"],
   },
   sodium: {
     type: Number,
-    required: [true, "Sodium is required"],
     min: [0, "Sodium must be at least 0"],
   },
   description: {
@@ -71,17 +68,47 @@ recipeSchema.plugin(timestamps);
 // Add sanitize plugin
 recipeSchema.plugin(sanitize);
 
-// Pre-save hook to normalize name
+// Pre-save hook to normalize name and calculate nutritional values
 recipeSchema.pre("save", async function (next) {
   this.name = this.name.trim().toLowerCase();
 
-  // Verificação de ingredientId
+  let totalRecipeWeight = 0;
+  let totalCalories = 0;
+  let totalCarbohydrate = 0;
+  let totalProtein = 0;
+  let totalFat = 0;
+  let totalSaturatedFat = 0;
+  let totalFiber = 0;
+  let totalSodium = 0;
+
   for (const ingredient of this.ingredients) {
-    const ingredientExists = await Ingredient.findById(ingredient.ingredientId);
-    if (!ingredientExists) {
-      return next(new Error(`Ingredient with ID ${ingredient.ingredientId} does not exist`));
+    const ingredientData = await Ingredient.findById(ingredient.ingredientId);
+    if (!ingredientData) {
+      return next(
+        new Error(
+          `Ingredient with ID ${ingredient.ingredientId} does not exist`
+        )
+      );
     }
+    const measureFactor = ingredient.measure / 100;
+    totalRecipeWeight += ingredient.measure;
+    totalCalories += ingredientData.calories * measureFactor;
+    totalCarbohydrate += ingredientData.carbohydrate * measureFactor;
+    totalProtein += ingredientData.protein * measureFactor;
+    totalFat += ingredientData.totalFat * measureFactor;
+    totalSaturatedFat += ingredientData.saturatedFat * measureFactor;
+    totalFiber += ingredientData.fiber * measureFactor;
+    totalSodium += ingredientData.sodium * measureFactor;
   }
+
+  this.recipeWeight = totalRecipeWeight;
+  this.calories = totalCalories;
+  this.carbohydrate = totalCarbohydrate;
+  this.protein = totalProtein;
+  this.totalFat = totalFat;
+  this.saturatedFat = totalSaturatedFat;
+  this.fiber = totalFiber;
+  this.sodium = totalSodium;
 
   next();
 });
