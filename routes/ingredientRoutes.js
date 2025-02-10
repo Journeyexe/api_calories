@@ -8,4 +8,7 @@ router
   .get(ingredientController.getAllIngredient)
   .post(ingredientController.createIngredient);
 
-router.get("/calories-range", ingredientController.getIngredientByCaloriesRange);
+router.get(
+  "/calories-range",
+  ingredientController.getIngredientByCaloriesRange
+);
