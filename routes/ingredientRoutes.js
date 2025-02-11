@@ -12,3 +12,5 @@ router.get(
   "/calories-range",
   ingredientController.getIngredientByCaloriesRange
 );
+
+router.get("/:id", ingredientController.getIngredientById);

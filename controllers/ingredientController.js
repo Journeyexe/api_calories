@@ -22,6 +22,32 @@ export const ingredientController = {
     }
   },
 
+  async getIngredientById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const ingredient = await Ingredient.findById(id).select("-__v");
+
+      if (!ingredient) {
+        return res.status(404).json({
+          success: false,
+          error: "Ingrediente não encontrado",
+        });
+      }
+
+      const response = {
+        ...ingredient.toObject({ virtuals: true }),
+        nutritionSummary: ingredient.getNutritionSummary(),
+      };
+
+      res.status(200).json({
+        success: true,
+        data: response,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async createIngredient(req, res, next) {
     try {
       const ingredient = await Ingredient.create(req.body);
