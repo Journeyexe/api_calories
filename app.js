@@ -1,11 +1,11 @@
 import express from "express";
 import cors from "cors";
 import "dotenv/config";
-import { connectDB } from "./config/database.js";
-import { router as ingredientRoutes } from "./routes/ingredientRoutes.js";
-import { router as recipeRoutes } from "./routes/recipeRoutes.js";
-import { errorHandler } from "./middleware/errorHandler.js";
-import { logger } from "./config/logger.js";
+import { connectDB } from "./src/config/database.js";
+import { router as ingredientRoutes } from "./src/routes/ingredientRoutes.js";
+import { router as recipeRoutes } from "./src/routes/recipeRoutes.js";
+import { errorHandler } from "./src/middleware/errorHandler.js";
+import { logger } from "./src/config/logger.js";
 
 const app = express();
 const port = process.env.PORT || 3000;
