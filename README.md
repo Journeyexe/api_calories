@@ -1,5 +1,3 @@
-Aqui está o seu `README` com alguns emojis para deixá-lo mais bonito e visualmente atraente:
-
 # 🍏 Calories API �
 
 Uma API RESTful para gerenciamento de alimentos, ingredientes e receitas com cálculo automático de informações nutricionais. 🥗🍳
@@ -184,7 +182,3 @@ npm start
 3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
 4. Push para a branch (`git push origin feature/nova-feature`)
 5. Abra um Pull Request
-
-## 📜 Licença
-
-Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE para mais detalhes.
