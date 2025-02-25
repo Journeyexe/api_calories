@@ -1,4 +1,4 @@
-# 🍏 Calories API �
+# 🍏 Calories API
 
 Uma API RESTful para gerenciamento de alimentos, ingredientes e receitas com cálculo automático de informações nutricionais. 🥗🍳
 
