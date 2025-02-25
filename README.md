@@ -50,7 +50,7 @@ api_calories/
 
 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/Journeyexe/api_calories
 cd api_calories
 ```
 
