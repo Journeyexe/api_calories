@@ -10,12 +10,12 @@ export const ingredientController = {
       const ingredientsWithVirtuals = ingredients.map((ingredient) => ({
         ...ingredient.toObject({ virtuals: true }),
         nutritionSummary: ingredient.getNutritionSummary(),
-      }));
+      })).reverse();
 
       res.status(200).json({
         success: true,
         count: ingredients.length,
-        data: ingredientsWithVirtuals.reverse,
+        data: ingredientsWithVirtuals,
       });
     } catch (error) {
       next(error);
