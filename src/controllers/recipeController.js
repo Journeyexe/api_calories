@@ -7,12 +7,12 @@ export const recipeController = {
       const recipes = await Recipe.find().populate({
         path: "ingredients.ingredientId",
         select: "name calories", // Seleciona apenas nome e calorias do ingrediente
-      }).reverse();
+      });
 
       res.status(200).json({
         success: true,
         count: recipes.length,
-        data: recipes,
+        data: recipes.reverse(),
       });
     } catch (error) {
       next(error);
