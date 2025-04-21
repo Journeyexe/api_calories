@@ -12,7 +12,7 @@ export const recipeController = {
       res.status(200).json({
         success: true,
         count: recipes.length,
-        data: recipes,
+        data: recipes.reverse,
       });
     } catch (error) {
       next(error);

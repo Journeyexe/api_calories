@@ -15,7 +15,7 @@ export const ingredientController = {
       res.status(200).json({
         success: true,
         count: ingredients.length,
-        data: ingredientsWithVirtuals,
+        data: ingredientsWithVirtuals.reverse,
       });
     } catch (error) {
       next(error);
