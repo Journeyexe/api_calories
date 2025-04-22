@@ -22,6 +22,26 @@ export const ingredientController = {
     }
   },
 
+  async getUserIngredient(req, res, next) {
+    try {
+      const ingredients = await Ingredient.find({ user: req.user.id }).select("-__v");
+
+      // Inclui caloriesFromFat virtual no response
+      const ingredientsWithVirtuals = ingredients.map((ingredient) => ({
+        ...ingredient.toObject({ virtuals: true }),
+        nutritionSummary: ingredient.getNutritionSummary(),
+      }));
+
+      res.status(200).json({
+        success: true,
+        count: ingredients.length,
+        data: ingredientsWithVirtuals.reverse(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async getIngredientById(req, res, next) {
     try {
       const { id } = req.params;
@@ -50,7 +70,10 @@ export const ingredientController = {
 
   async createIngredient(req, res, next) {
     try {
-      const ingredient = await Ingredient.create(req.body);
+      const ingredient = await Ingredient.create({
+        ...req.body,
+        user: req.user.id, // Adiciona o ID do usuário
+      });
 
       // Inclui informações adicionais no response
       const response = {

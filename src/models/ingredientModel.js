@@ -45,6 +45,12 @@ const ingredientSchema = new Schema({
     required: [true, "Sodium is required"],
     min: [0, "Sodium must be at least 0"],
   },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+
 });
 
 // Add timestamps plugin

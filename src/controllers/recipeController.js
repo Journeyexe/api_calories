@@ -19,9 +19,29 @@ export const recipeController = {
     }
   },
 
+  async getUserRecipes(req, res, next) {
+    try {
+      const recipes = await Recipe.find({ user: req.user.id }).populate({
+        path: "ingredients.ingredientId",
+        select: "name calories", // Seleciona apenas nome e calorias do ingrediente
+      });
+
+      res.status(200).json({
+        success: true,
+        count: recipes.length,
+        data: recipes.reverse(),
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
   async createRecipe(req, res, next) {
     try {
-      const recipe = await Recipe.create(req.body);
+      const recipe = await Recipe.create({
+        ...req.body,
+        user: req.user.id, // Adiciona o ID do usuário
+      });
 
       // Popular ingredientes após criar
       await recipe.populate({

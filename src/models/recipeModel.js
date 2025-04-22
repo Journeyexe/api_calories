@@ -61,6 +61,11 @@ const recipeSchema = new Schema({
     trim: true,
   },
   ingredients: [recipeIngredientSchema],
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
 });
 
 // Add timestamps plugin
