@@ -8,9 +8,12 @@ router.use(protect);
 
 router
   .route("/")
-  .get(ingredientController.getAllIngredient)
-  .get(ingredientController.getUserIngredient)
+  .get(ingredientController.getAllIngredients)
   .post(ingredientController.createIngredient);
+
+router
+  .route("/me")
+  .get(ingredientController.getMyIngredients)
 
 router.get(
   "/calories-range",

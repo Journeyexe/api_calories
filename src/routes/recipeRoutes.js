@@ -9,8 +9,11 @@ router.use(protect);
 router
   .route("/")
   .get(recipeController.getAllRecipes)
-  .get(recipeController.getUserRecipes)
   .post(recipeController.createRecipe);
+
+router
+.route("/me")
+.get(recipeController.getMyRecipes);
 
 router
   .route("/:id")

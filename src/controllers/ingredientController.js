@@ -2,7 +2,7 @@ import Ingredient from "../models/ingredientModel.js";
 import { logger } from "../config/logger.js";
 
 export const ingredientController = {
-  async getAllIngredient(req, res, next) {
+  async getAllIngredients(req, res, next) {
     try {
       const ingredients = await Ingredient.find().select("-__v");
 
@@ -22,7 +22,7 @@ export const ingredientController = {
     }
   },
 
-  async getUserIngredient(req, res, next) {
+  async getMyIngredients(req, res, next) {
     try {
       const ingredients = await Ingredient.find({ user: req.user.id }).select("-__v");
 

@@ -19,7 +19,7 @@ export const recipeController = {
     }
   },
 
-  async getUserRecipes(req, res, next) {
+  async getMyRecipes(req, res, next) {
     try {
       const recipes = await Recipe.find({ user: req.user.id }).populate({
         path: "ingredients.ingredientId",
