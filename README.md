@@ -1,27 +1,29 @@
-# 🍏 Calories API
+# 🍏 Calories API - Com Autenticação JWT
 
-Uma API RESTful para gerenciamento de alimentos, ingredientes e receitas com cálculo automático de informações nutricionais. 🥗🍳
+Uma API RESTful para gerenciamento de alimentos, ingredientes e receitas com cálculo automático de informações nutricionais e sistema de autenticação seguro. 🥗🍳🔒
 
-## 🌟 Visão Geral
+## 🌟 Novas Funcionalidades
 
-Esta API permite gerenciar um banco de dados de alimentos e receitas, incluindo:
-- 📝 Cadastro de alimentos com informações nutricionais
-- 🥄 Cadastro de ingredientes com valores nutricionais por 100g
-- 📊 Criação de receitas com cálculo automático de nutrientes baseado nos ingredientes
-- 🔍 Consultas por faixa de calorias
-- 🧼 Sanitização de dados e validação completa
+- 🔐 Sistema de autenticação com JWT
+- 👤 Cadastro e gerenciamento de usuários
+- 🛡️ Proteção de endpoints com middleware de autenticação
+- 👩‍🍳 Associação de receitas/ingredientes ao usuário que os criou
+- 🚦 Controle de acesso baseado em roles (usuário/admin)
 
-## 🛠️ Tecnologias Utilizadas
+## 🛠️ Tecnologias Utilizadas (Atualizado)
 
 - Node.js 🟢
 - Express 🚀
 - MongoDB 🍃
 - Mongoose 🦡
+- JWT (Autenticação) 🔐
+- Bcryptjs (Hash de senhas) 🛡️
 - Winston (logging) 📜
 - Cors 🌐
 - Dotenv 🔧
+- Cookie-parser 🍪
 
-## 📂 Estrutura do Projeto
+## 📂 Estrutura do Projeto (Atualizada)
 
 ```
 api_calories/
@@ -30,23 +32,26 @@ api_calories/
 │   │   ├── database.js 🗄️
 │   │   └── logger.js 📝
 │   ├── controllers/
-│   │   ├── IngredientController.js 🍎
+│   │   ├── authController.js 🔑
+│   │   ├── ingredientController.js 🍎
 │   │   └── recipeController.js 🍲
 │   ├── middleware/
+│   │   ├── authMiddleware.js 🛡️
 │   │   └── errorHandler.js 🚨
 │   ├── models/
-│   │   ├── Ingredient_model.js 🍏
+│   │   ├── userModel.js 👤
 │   │   ├── ingredientModel.js 🧂
 │   │   └── recipeModel.js 📄
 │   └── routes/
-│       ├── IngredientRoutes.js 🛤️
+│       ├── authRoutes.js 🛤️
+│       ├── ingredientRoutes.js 🛤️
 │       └── recipeRoutes.js 🛤️
 ├── app.js 🖥️
 ├── .env 🔒
 └── package.json 📦
 ```
 
-## 🚀 Instalação
+## 🚀 Instalação (Atualizada)
 
 1. Clone o repositório
 ```bash
@@ -61,10 +66,12 @@ npm install
 
 3. Configure as variáveis de ambiente
 Crie um arquivo `.env` na raiz do projeto:
-```
+```env
 PORT=8080
 MONGO_URI=mongodb://localhost:27017/calories_db
 CORS_ORIGIN=*
+JWT_SECRET=seu_segredo_super_secreto_aqui
+JWT_EXPIRES_IN=30d
 ```
 
 4. Inicie o servidor
@@ -72,113 +79,100 @@ CORS_ORIGIN=*
 npm start
 ```
 
-## 📊 Modelos de Dados
+## 🔐 Fluxo de Autenticação
 
-### 🍎 Ingredient
-- `name` (String): Nome do alimento (único)
-- `calories` (Number): Calorias por porção
-- `protein` (Number): Quantidade de proteína em gramas
-- `carbohydrate` (Number): Quantidade de carboidratos em gramas
-- `fat` (Number): Quantidade de gordura em gramas
-- `totalFat` (Number): Gordura total
-- `saturatedFat` (Number): Gordura saturada
-- `fiber` (Number): Fibras
-- `sodium` (Number): Sódio
+1. **Registro de Usuário**:
+   ```bash
+   POST /api/auth/register
+   ```
+   ```json
+   {
+     "name": "Nome do Usuário",
+     "email": "usuario@exemplo.com",
+     "password": "senha123"
+   }
+   ```
 
-### 📄 Recipe
-- `name` (String): Nome da receita (único)
-- `description` (String): Descrição da receita
-- `recipeWeight` (Number): Peso total da receita (calculado automaticamente)
-- `ingredients` (Array): Lista de ingredientes com suas medidas
-- Informações nutricionais (calculadas automaticamente):
-  - `calories`
-  - `carbohydrate`
-  - `protein`
-  - `totalFat`
-  - `saturatedFat`
-  - `fiber`
-  - `sodium`
+2. **Login**:
+   ```bash
+   POST /api/auth/login
+   ```
+   ```json
+   {
+     "email": "usuario@exemplo.com",
+     "password": "senha123"
+   }
+   ```
 
-## 🌐 Endpoints da API
+3. **Acesso Protegido**:
+   - Inclua o token JWT no header `Authorization: Bearer <token>`
+   - Ou use o cookie `jwt` automaticamente enviado após login
 
-### 🍎 Alimentos (Ingredients)
+## 📊 Modelos de Dados (Atualizados)
 
-- **GET /api/ingredients**
-  - Retorna todos os alimentos cadastrados
+### 👤 User
+- `name` (String): Nome do usuário
+- `email` (String): E-mail (único)
+- `password` (String): Senha (hash)
+- `role` (String): Tipo de usuário (user/admin)
 
-- **POST /api/ingredients**
-  - Cria um novo alimento
-  - Corpo da requisição:
-    ```json
-    {
-      "name": "Arroz Integral",
-      "calories": 130,
-      "protein": 2.7,
-      "carbohydrate": 28,
-      "totalFat": 0.3,
-      "saturatedFat": 0,
-      "fiber": 0.4,
-      "sodium": 10
-    }
-    ```
+### 🍎 Ingredient (Atualizado)
+- Todos os campos anteriores +
+- `user` (ObjectId): Referência ao usuário criador
 
-- **GET /api/ingredients/calories-range?min=100&max=300**
-  - Retorna alimentos em uma faixa específica de calorias
+### 📄 Recipe (Atualizado)
+- Todos os campos anteriores +
+- `user` (ObjectId): Referência ao usuário criador
 
-### 📄 Receitas (Recipes)
+## 🌐 Endpoints da API (Atualizados)
 
-- **GET /api/recipes**
-  - Retorna todas as receitas com detalhes dos ingredientes
+### 🔑 Autenticação (Auth)
 
-- **GET /api/recipes/:id**
-  - Retorna uma receita específica por ID
+- **POST /api/auth/register** - Registra novo usuário
+- **POST /api/auth/login** - Realiza login
+- **POST /api/auth/logout** - Realiza logout
+- **GET /api/auth/me** - Retorna dados do usuário logado
 
-- **POST /api/recipes**
-  - Cria uma nova receita
-  - Corpo da requisição:
-    ```json
-    {
-      "name": "Salada de Quinoa",
-      "description": "Uma salada nutritiva e refrescante",
-      "ingredients": [
-        {
-          "ingredientId": "60a1b2c3d4e5f6a7b8c9d0e1",
-          "measure": 100
-        },
-        {
-          "ingredientId": "60a1b2c3d4e5f6a7b8c9d0e2",
-          "measure": 50
-        }
-      ]
-    }
-    ```
-  - Os valores nutricionais serão calculados automaticamente
+### 🍎 Alimentos (Ingredients) [Protegidos]
 
-- **PUT /api/recipes/:id**
-  - Atualiza uma receita existente
+- Todos os endpoints anteriores agora requerem autenticação
+- Cada usuário só acessa seus próprios ingredientes
 
-- **DELETE /api/recipes/:id**
-  - Remove uma receita do banco de dados
+### 📄 Receitas (Recipes) [Protegidos]
 
-## ✨ Características Especiais
+- Todos os endpoints anteriores agora requerem autenticação
+- Cada usuário só acessa suas próprias receitas
 
-1. **Cálculo Automático de Nutrientes**:
-   - As receitas calculam automaticamente os valores nutricionais com base nos ingredientes
+## ✨ Características Especiais (Atualizadas)
 
-2. **Validação e Sanitização**:
-   - Todos os dados são validados e sanitizados antes de serem armazenados
+1. **Autenticação Segura**:
+   - Tokens JWT com expiração
+   - Senhas armazenadas como hash
+   - Proteção contra ataques CSRF
 
-3. **Tratamento de Erros Centralizado**:
-   - Middleware de erro para respostas padronizadas
+2. **Controle de Acesso**:
+   - Middleware de autenticação em todas as rotas
+   - Cada usuário tem acesso apenas aos seus próprios recursos
 
-4. **Logging Avançado**:
-   - Sistema de logging com Winston para monitoramento e debug
+3. **Sistema de Logout**:
+   - Invalidação de tokens via cookies
 
+4. **Novos Recursos**:
+   - Endpoint para obter dados do usuário logado
+   - Validação de e-mail único
+   - Tratamento de erros específicos para autenticação
 
-## 🤝 Contribuição
+## 🤝 Contribuição (Atualizado)
 
 1. Faça um fork do projeto
 2. Crie uma feature branch (`git checkout -b feature/nova-feature`)
-3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
-4. Push para a branch (`git push origin feature/nova-feature`)
-5. Abra um Pull Request
+3. Certifique-se de testar as mudanças com autenticação
+4. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
+5. Push para a branch (`git push origin feature/nova-feature`)
+6. Abra um Pull Request
+
+## 📌 Notas Importantes
+
+- Todos os endpoints (exceto /auth) requerem autenticação
+- O token JWT deve ser enviado no header `Authorization` como `Bearer <token>`
+- Em produção, configure HTTPS e opções seguras para cookies
