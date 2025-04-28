@@ -8,7 +8,6 @@ const ingredientSchema = new Schema({
     type: String,
     required: [true, "Name is required"],
     trim: true,
-    unique: true,
   },
   calories: {
     type: Number,

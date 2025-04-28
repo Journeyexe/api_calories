@@ -22,7 +22,6 @@ const recipeSchema = new Schema({
     type: String,
     required: [true, "Name is required"],
     trim: true,
-    unique: true,
   },
   recipeWeight: {
     type: Number,
