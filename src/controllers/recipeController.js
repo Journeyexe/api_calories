@@ -12,7 +12,7 @@ export const recipeController = {
       res.status(200).json({
         success: true,
         count: recipes.length,
-        data: recipes.reverse(),
+        data: recipes.sort((a, b) => a.name.localeCompare(b.name)),
       });
     } catch (error) {
       next(error);
@@ -29,7 +29,7 @@ export const recipeController = {
       res.status(200).json({
         success: true,
         count: recipes.length,
-        data: recipes.reverse(),
+        data: recipes.sort((a, b) => a.name.localeCompare(b.name)),
       });
     } catch (error) {
       next(error);

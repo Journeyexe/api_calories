@@ -15,7 +15,7 @@ export const ingredientController = {
       res.status(200).json({
         success: true,
         count: ingredients.length,
-        data: ingredientsWithVirtuals.reverse(),
+        data: ingredientsWithVirtuals.sort((a, b) => a.name.localeCompare(b.name)),
       });
     } catch (error) {
       next(error);
@@ -35,7 +35,7 @@ export const ingredientController = {
       res.status(200).json({
         success: true,
         count: ingredients.length,
-        data: ingredientsWithVirtuals.reverse(),
+        data: ingredientsWithVirtuals.sort((a, b) => a.name.localeCompare(b.name)),
       });
     } catch (error) {
       next(error);
