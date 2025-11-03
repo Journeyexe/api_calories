@@ -16,13 +16,19 @@ const customFormat = winston.format.combine(
   })
 );
 
-export const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || "info",
-  format: customFormat,
-  transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), customFormat),
-    }),
+// Detecta se está em ambiente serverless (Vercel, AWS Lambda, etc.)
+const isServerless = process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME;
+
+// Transports base (sempre inclui console)
+const transports = [
+  new winston.transports.Console({
+    format: winston.format.combine(winston.format.colorize(), customFormat),
+  }),
+];
+
+// Adiciona file transports apenas se NÃO estiver em ambiente serverless
+if (!isServerless) {
+  transports.push(
     new winston.transports.File({
       filename: "logs/error.log",
       level: "error",
@@ -33,6 +39,12 @@ export const logger = winston.createLogger({
       filename: "logs/combined.log",
       maxsize: 5242880,
       maxFiles: 5,
-    }),
-  ],
+    })
+  );
+}
+
+export const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || "info",
+  format: customFormat,
+  transports,
 });
