@@ -105,16 +105,24 @@ export class RecipeService {
       await this.validateIngredients(data.ingredients, userId, userRole);
     }
 
-    const recipe = await Recipe.findByIdAndUpdate(id, data, {
-      new: true,
-      runValidators: true,
-    })
-      .populate("ingredients.ingredientId", "name calories protein carbs fat")
-      .select("-__v");
+    // Buscar a receita
+    const recipe = await Recipe.findById(id);
 
     if (!recipe) {
       throw new NotFoundError("Receita");
     }
+
+    // Atualizar os campos
+    Object.assign(recipe, data);
+
+    // Salvar (isso vai disparar o hook pre('save') que recalcula os valores nutricionais)
+    await recipe.save();
+
+    // Popular os ingredientes e retornar
+    await recipe.populate(
+      "ingredients.ingredientId",
+      "name calories protein carbs fat"
+    );
 
     return recipe;
   }

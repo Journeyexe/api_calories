@@ -18,7 +18,7 @@ export const createRecipeValidator = [
   body("ingredients.*.ingredientId")
     .notEmpty()
     .withMessage("ID do ingrediente é obrigatório"),
-  body("ingredients.*.quantity")
+  body("ingredients.*.measure")
     .isFloat({ min: 0.1 })
     .withMessage("Quantidade deve ser maior que 0"),
 ];
@@ -42,7 +42,7 @@ export const updateRecipeValidator = [
     .optional()
     .notEmpty()
     .withMessage("ID do ingrediente é obrigatório"),
-  body("ingredients.*.quantity")
+  body("ingredients.*.measure")
     .optional()
     .isFloat({ min: 0.1 })
     .withMessage("Quantidade deve ser maior que 0"),

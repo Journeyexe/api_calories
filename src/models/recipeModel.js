@@ -122,6 +122,105 @@ recipeSchema.pre("save", async function (next) {
   next();
 });
 
+// Pre-update hook for findOneAndUpdate to recalculate nutritional values
+recipeSchema.pre("findOneAndUpdate", async function (next) {
+  const update = this.getUpdate();
+
+  // Só recalcular se houver alteração nos ingredientes
+  if (update.ingredients || update.$set?.ingredients) {
+    const ingredients = update.ingredients || update.$set?.ingredients;
+
+    if (!ingredients || ingredients.length === 0) {
+      return next();
+    }
+
+    let totalRecipeWeight = 0;
+    let totalCalories = 0;
+    let totalCarbohydrate = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    let totalSaturatedFat = 0;
+    let totalFiber = 0;
+    let totalSodium = 0;
+
+    for (const ingredient of ingredients) {
+      const ingredientData = await Ingredient.findById(ingredient.ingredientId);
+      if (!ingredientData) {
+        return next(
+          new Error(
+            `Ingredient with ID ${ingredient.ingredientId} does not exist`
+          )
+        );
+      }
+      const measureFactor = ingredient.measure / 100;
+      totalRecipeWeight += ingredient.measure;
+      totalCalories += ingredientData.calories * measureFactor;
+      totalCarbohydrate += ingredientData.carbohydrate * measureFactor;
+      totalProtein += ingredientData.protein * measureFactor;
+      totalFat += ingredientData.totalFat * measureFactor;
+      totalSaturatedFat += ingredientData.saturatedFat * measureFactor;
+      totalFiber += ingredientData.fiber * measureFactor;
+      totalSodium += ingredientData.sodium * measureFactor;
+    }
+
+    // Atualizar os campos calculados
+    if (update.$set) {
+      update.$set.recipeWeight = totalRecipeWeight;
+      update.$set.calories = totalCalories;
+      update.$set.carbohydrate = totalCarbohydrate;
+      update.$set.protein = totalProtein;
+      update.$set.totalFat = totalFat;
+      update.$set.saturatedFat = totalSaturatedFat;
+      update.$set.fiber = totalFiber;
+      update.$set.sodium = totalSodium;
+    } else {
+      update.recipeWeight = totalRecipeWeight;
+      update.calories = totalCalories;
+      update.carbohydrate = totalCarbohydrate;
+      update.protein = totalProtein;
+      update.totalFat = totalFat;
+      update.saturatedFat = totalSaturatedFat;
+      update.fiber = totalFiber;
+      update.sodium = totalSodium;
+    }
+  }
+
+  next();
+});
+
+// Instance method to return computed nutrition values
+recipeSchema.methods.calculateNutrition = function () {
+  // Use stored computed fields when available
+  const weight = this.recipeWeight || 0;
+
+  const nutrition = {
+    recipeWeight: weight,
+    calories: this.calories || 0,
+    carbohydrate: this.carbohydrate || 0,
+    protein: this.protein || 0,
+    totalFat: this.totalFat || 0,
+    saturatedFat: this.saturatedFat || 0,
+    fiber: this.fiber || 0,
+    sodium: this.sodium || 0,
+  };
+
+  // Also provide per-100g values when recipeWeight is available
+  if (weight > 0) {
+    const factor = 100 / weight;
+    nutrition.per100g = {
+      calories: Math.round(nutrition.calories * factor * 100) / 100,
+      carbohydrate: Math.round(nutrition.carbohydrate * factor * 100) / 100,
+      protein: Math.round(nutrition.protein * factor * 100) / 100,
+      totalFat: Math.round(nutrition.totalFat * factor * 100) / 100,
+      saturatedFat: Math.round(nutrition.saturatedFat * factor * 100) / 100,
+      fiber: Math.round(nutrition.fiber * factor * 100) / 100,
+      sodium: Math.round(nutrition.sodium * factor * 100) / 100,
+    };
+  }
+
+  return nutrition;
+};
+
 const Recipe = mongoose.model("Recipe", recipeSchema);
 
 export default Recipe;

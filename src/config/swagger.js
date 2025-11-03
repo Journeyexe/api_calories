@@ -108,7 +108,7 @@ const options = {
                   ingredientId: {
                     type: "string",
                   },
-                  quantity: {
+                  measure: {
                     type: "number",
                   },
                 },
