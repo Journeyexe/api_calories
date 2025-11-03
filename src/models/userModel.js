@@ -21,7 +21,7 @@ const userSchema = new Schema({
   password: {
     type: String,
     required: [true, "Password is required"],
-    minlength: [6, "Password must be at least 6 characters"],
+    minlength: [8, "Password must be at least 8 characters"],
     select: false, // Não retorna a senha em consultas
   },
   role: {
@@ -38,7 +38,7 @@ userSchema.plugin(sanitize);
 // Hash da senha antes de salvar
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
-  
+
   try {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);

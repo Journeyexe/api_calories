@@ -73,6 +73,10 @@ recipeSchema.plugin(timestamps);
 // Add sanitize plugin
 recipeSchema.plugin(sanitize);
 
+// Índices para melhorar performance de queries
+recipeSchema.index({ name: 1 });
+recipeSchema.index({ user: 1, name: 1 });
+
 // Pre-save hook to normalize name and calculate nutritional values
 recipeSchema.pre("save", async function (next) {
   this.name = this.name.trim().toLowerCase();

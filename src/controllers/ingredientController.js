@@ -1,118 +1,107 @@
-import Ingredient from "../models/ingredientModel.js";
+import { IngredientService } from "../services/ingredientService.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { logger } from "../config/logger.js";
+import Ingredient from "../models/ingredientModel.js";
+
+const ingredientService = new IngredientService();
 
 export const ingredientController = {
-  async getAllIngredients(req, res, next) {
-    try {
-      const ingredients = await Ingredient.find().select("-__v");
+  getAllIngredients: asyncHandler(async (req, res, next) => {
+    const { page = 1, limit = 10, sort, fields } = req.query;
 
-      // Inclui caloriesFromFat virtual no response
-      const ingredientsWithVirtuals = ingredients.map((ingredient) => ({
-        ...ingredient.toObject({ virtuals: true }),
-        nutritionSummary: ingredient.getNutritionSummary(),
-      }));
-
-      res.status(200).json({
-        success: true,
-        count: ingredients.length,
-        data: ingredientsWithVirtuals.sort((a, b) => a.name.localeCompare(b.name)),
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async getMyIngredients(req, res, next) {
-    try {
-      const ingredients = await Ingredient.find({ user: req.user.id }).select("-__v");
-
-      // Inclui caloriesFromFat virtual no response
-      const ingredientsWithVirtuals = ingredients.map((ingredient) => ({
-        ...ingredient.toObject({ virtuals: true }),
-        nutritionSummary: ingredient.getNutritionSummary(),
-      }));
-
-      res.status(200).json({
-        success: true,
-        count: ingredients.length,
-        data: ingredientsWithVirtuals.sort((a, b) => a.name.localeCompare(b.name)),
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async getIngredientById(req, res, next) {
-    try {
-      const { id } = req.params;
-      const ingredient = await Ingredient.findById(id).select("-__v");
-
-      if (!ingredient) {
-        return res.status(404).json({
-          success: false,
-          error: "Ingrediente não encontrado",
-        });
+    const result = await ingredientService.getAllIngredients(
+      {},
+      {
+        page,
+        limit,
+        sort,
+        fields,
       }
+    );
 
-      const response = {
-        ...ingredient.toObject({ virtuals: true }),
-        nutritionSummary: ingredient.getNutritionSummary(),
-      };
+    res.status(200).json({
+      success: true,
+      count: result.data.length,
+      data: result.data.sort((a, b) => a.name.localeCompare(b.name)),
+      pagination: result.pagination,
+    });
+  }),
 
-      res.status(200).json({
-        success: true,
-        data: response,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  getMyIngredients: asyncHandler(async (req, res, next) => {
+    const { page = 1, limit = 10, sort, fields } = req.query;
 
-  async createIngredient(req, res, next) {
-    try {
-      const ingredient = await Ingredient.create({
-        ...req.body,
-        user: req.user.id, // Adiciona o ID do usuário
-      });
+    const result = await ingredientService.getAllIngredients(
+      { user: req.user.id },
+      { page, limit, sort, fields }
+    );
 
-      // Inclui informações adicionais no response
-      const response = {
-        ...ingredient.toObject({ virtuals: true }),
-        nutritionSummary: ingredient.getNutritionSummary(),
-      };
+    res.status(200).json({
+      success: true,
+      count: result.data.length,
+      data: result.data.sort((a, b) => a.name.localeCompare(b.name)),
+      pagination: result.pagination,
+    });
+  }),
 
-      res.status(201).json({
-        success: true,
-        data: response,
-      });
-    } catch (error) {
-      if (error.code === 11000) {
-        // Duplicate key error
-        return res.status(400).json({
-          success: false,
-          error: "Um alimento com este nome já existe",
-        });
-      }
-      next(error);
-    }
-  },
+  getIngredientById: asyncHandler(async (req, res, next) => {
+    const { id } = req.params;
+    const ingredient = await ingredientService.getIngredientById(id);
 
-  // Método adicional para buscar por faixa de calorias
-  async getIngredientByCaloriesRange(req, res, next) {
-    try {
-      const { min, max } = req.query;
-      const ingredients = await Ingredient.findByCaloriesRange(
-        parseInt(min) || 0,
-        parseInt(max) || 1000
-      );
+    res.status(200).json({
+      success: true,
+      data: ingredient,
+    });
+  }),
 
-      res.status(200).json({
-        success: true,
-        count: ingredients.length,
-        data: ingredients,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  createIngredient: asyncHandler(async (req, res, next) => {
+    const ingredient = await ingredientService.createIngredient(
+      req.body,
+      req.user.id
+    );
+
+    const response = {
+      ...ingredient.toObject({ virtuals: true }),
+      nutritionSummary: ingredient.getNutritionSummary(),
+    };
+
+    res.status(201).json({
+      success: true,
+      data: response,
+    });
+  }),
+
+  updateIngredient: asyncHandler(async (req, res, next) => {
+    const ingredient = await ingredientService.updateIngredient(
+      req.params.id,
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      data: ingredient,
+    });
+  }),
+
+  deleteIngredient: asyncHandler(async (req, res, next) => {
+    await ingredientService.deleteIngredient(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Ingrediente deletado com sucesso",
+    });
+  }),
+
+  getIngredientByCaloriesRange: asyncHandler(async (req, res, next) => {
+    const { min, max } = req.query;
+    const ingredients = await Ingredient.findByCaloriesRange(
+      parseInt(min) || 0,
+      parseInt(max) || 1000
+    );
+
+    res.status(200).json({
+      success: true,
+      count: ingredients.length,
+      data: ingredients,
+    });
+  }),
 };

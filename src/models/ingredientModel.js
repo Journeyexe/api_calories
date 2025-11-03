@@ -49,7 +49,6 @@ const ingredientSchema = new Schema({
     ref: "User",
     required: true,
   },
-
 });
 
 // Add timestamps plugin
@@ -57,6 +56,11 @@ ingredientSchema.plugin(timestamps);
 
 // Add sanitize plugin
 ingredientSchema.plugin(sanitize);
+
+// Índices para melhorar performance de queries
+ingredientSchema.index({ name: 1 });
+ingredientSchema.index({ user: 1, name: 1 });
+ingredientSchema.index({ calories: 1 });
 
 // Pre-save hook to normalize name
 ingredientSchema.pre("save", function (next) {

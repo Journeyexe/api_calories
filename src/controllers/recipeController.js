@@ -1,135 +1,89 @@
-import Recipe from "../models/recipeModel.js";
+import { RecipeService } from "../services/recipeService.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { logger } from "../config/logger.js";
 
+const recipeService = new RecipeService();
+
 export const recipeController = {
-  async getAllRecipes(req, res, next) {
-    try {
-      const recipes = await Recipe.find().populate({
-        path: "ingredients.ingredientId",
-        select: "name calories", // Seleciona apenas nome e calorias do ingrediente
-      });
+  getAllRecipes: asyncHandler(async (req, res, next) => {
+    const { page = 1, limit = 10, sort, fields } = req.query;
 
-      res.status(200).json({
-        success: true,
-        count: recipes.length,
-        data: recipes.sort((a, b) => a.name.localeCompare(b.name)),
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async getMyRecipes(req, res, next) {
-    try {
-      const recipes = await Recipe.find({ user: req.user.id }).populate({
-        path: "ingredients.ingredientId",
-        select: "name calories", // Seleciona apenas nome e calorias do ingrediente
-      });
-
-      res.status(200).json({
-        success: true,
-        count: recipes.length,
-        data: recipes.sort((a, b) => a.name.localeCompare(b.name)),
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async createRecipe(req, res, next) {
-    try {
-      const recipe = await Recipe.create({
-        ...req.body,
-        user: req.user.id, // Adiciona o ID do usuário
-      });
-
-      // Popular ingredientes após criar
-      await recipe.populate({
-        path: "ingredients.ingredientId",
-        select: "name calories",
-      });
-
-      res.status(201).json({
-        success: true,
-        data: recipe,
-      });
-    } catch (error) {
-      if (error.code === 11000) {
-        return res.status(400).json({
-          success: false,
-          error: "Uma receita com este nome já existe",
-        });
+    const result = await recipeService.getAllRecipes(
+      {},
+      {
+        page,
+        limit,
+        sort,
+        fields,
       }
-      next(error);
-    }
-  },
+    );
 
-  async getRecipeById(req, res, next) {
-    try {
-      const recipe = await Recipe.findById(req.params.id).populate({
-        path: "ingredients.ingredientId",
-        select: "name calories",
-      });
+    res.status(200).json({
+      success: true,
+      count: result.data.length,
+      data: result.data.sort((a, b) => a.name.localeCompare(b.name)),
+      pagination: result.pagination,
+    });
+  }),
 
-      if (!recipe) {
-        return res.status(404).json({
-          success: false,
-          error: "Receita não encontrada",
-        });
-      }
+  getMyRecipes: asyncHandler(async (req, res, next) => {
+    const { page = 1, limit = 10, sort, fields } = req.query;
 
-      res.status(200).json({
-        success: true,
-        data: recipe,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+    const result = await recipeService.getAllRecipes(
+      { user: req.user.id },
+      { page, limit, sort, fields }
+    );
 
-  async updateRecipe(req, res, next) {
-    try {
-      const recipe = await Recipe.findByIdAndUpdate(req.params.id, req.body, {
-        new: true,
-        runValidators: true,
-      }).populate({
-        path: "ingredients.ingredientId",
-        select: "name calories",
-      });
+    res.status(200).json({
+      success: true,
+      count: result.data.length,
+      data: result.data.sort((a, b) => a.name.localeCompare(b.name)),
+      pagination: result.pagination,
+    });
+  }),
 
-      if (!recipe) {
-        return res.status(404).json({
-          success: false,
-          error: "Receita não encontrada",
-        });
-      }
+  createRecipe: asyncHandler(async (req, res, next) => {
+    const recipe = await recipeService.createRecipe(
+      req.body,
+      req.user.id,
+      req.user.role
+    );
 
-      res.status(200).json({
-        success: true,
-        data: recipe,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+    res.status(201).json({
+      success: true,
+      data: recipe,
+    });
+  }),
 
-  async deleteRecipe(req, res, next) {
-    try {
-      const recipe = await Recipe.findByIdAndDelete(req.params.id);
+  getRecipeById: asyncHandler(async (req, res, next) => {
+    const recipe = await recipeService.getRecipeById(req.params.id);
 
-      if (!recipe) {
-        return res.status(404).json({
-          success: false,
-          error: "Receita não encontrada",
-        });
-      }
+    res.status(200).json({
+      success: true,
+      data: recipe,
+    });
+  }),
 
-      res.status(200).json({
-        success: true,
-        message: "Receita deletada com sucesso",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
+  updateRecipe: asyncHandler(async (req, res, next) => {
+    const recipe = await recipeService.updateRecipe(
+      req.params.id,
+      req.body,
+      req.user.id,
+      req.user.role
+    );
+
+    res.status(200).json({
+      success: true,
+      data: recipe,
+    });
+  }),
+
+  deleteRecipe: asyncHandler(async (req, res, next) => {
+    await recipeService.deleteRecipe(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Receita deletada com sucesso",
+    });
+  }),
 };

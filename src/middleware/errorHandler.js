@@ -1,9 +1,47 @@
 import { logger } from "../config/logger.js";
 
 export const errorHandler = (err, req, res, next) => {
-  logger.error(err.stack);
-  res.status(err.status || 500).json({
+  let error = { ...err };
+  error.message = err.message;
+
+  // Log do erro
+  logger.error(err);
+
+  // Mongoose bad ObjectId
+  if (err.name === "CastError") {
+    const message = "Recurso não encontrado";
+    error = { message, statusCode: 404 };
+  }
+
+  // Mongoose duplicate key
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyPattern)[0];
+    const message = `${field} já existe`;
+    error = { message, statusCode: 400 };
+  }
+
+  // Mongoose validation error
+  if (err.name === "ValidationError") {
+    const message = Object.values(err.errors)
+      .map((val) => val.message)
+      .join(", ");
+    error = { message, statusCode: 400 };
+  }
+
+  // JWT errors
+  if (err.name === "JsonWebTokenError") {
+    const message = "Token inválido";
+    error = { message, statusCode: 401 };
+  }
+
+  if (err.name === "TokenExpiredError") {
+    const message = "Token expirado";
+    error = { message, statusCode: 401 };
+  }
+
+  res.status(error.statusCode || err.statusCode || 500).json({
     success: false,
-    error: err.message || "Erro interno do servidor",
+    error: error.message || "Erro interno do servidor",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
 };

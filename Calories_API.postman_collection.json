@@ -1,0 +1,781 @@
+{
+  "info": {
+    "_postman_id": "calories-api-collection",
+    "name": "Calories API - Complete Collection",
+    "description": "API completa para gerenciamento de ingredientes e receitas com cálculo nutricional automático.\n\n## Como usar:\n1. Configure as variáveis de ambiente (baseUrl, token)\n2. Execute Register ou Login para obter token\n3. O token será salvo automaticamente\n4. Teste os demais endpoints\n\n## Variáveis:\n- `baseUrl`: http://localhost:8080\n- `token`: Será preenchido automaticamente após login",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica o status de saúde da aplicação, incluindo uptime, conexão com MongoDB e uso de memória."
+          },
+          "response": []
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health/ready",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "ready"]
+            },
+            "description": "Verifica se a aplicação está pronta para receber requisições."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints para verificar a saúde da aplicação"
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"token\", jsonData.token);",
+                  "    pm.test(\"Token saved\", function() {",
+                  "        pm.expect(jsonData.token).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@example.com\",\n  \"password\": \"Senha@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/register",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "register"]
+            },
+            "description": "Registra um novo usuário. A senha deve ter no mínimo 8 caracteres, incluindo maiúscula, minúscula, número e caractere especial."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"token\", jsonData.token);",
+                  "    pm.test(\"Token saved\", function() {",
+                  "        pm.expect(jsonData.token).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao@example.com\",\n  \"password\": \"Senha@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "login"]
+            },
+            "description": "Faz login e retorna um token JWT que será automaticamente salvo nas variáveis de ambiente."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "me"]
+            },
+            "description": "Retorna os dados do usuário autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "auth", "logout"]
+            },
+            "description": "Faz logout do usuário (limpa cookie)."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints de autenticação e gerenciamento de usuários"
+    },
+    {
+      "name": "Ingredients",
+      "item": [
+        {
+          "name": "List All Ingredients",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número da página"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Itens por página"
+                },
+                {
+                  "key": "sort",
+                  "value": "-calories",
+                  "description": "Ordenação (ex: -calories, name)",
+                  "disabled": true
+                },
+                {
+                  "key": "fields",
+                  "value": "name,calories,protein",
+                  "description": "Campos a retornar",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lista todos os ingredientes com suporte a paginação, ordenação e seleção de campos."
+          },
+          "response": []
+        },
+        {
+          "name": "List My Ingredients",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients/me?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients", "me"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "Lista apenas os ingredientes criados pelo usuário autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ingredient by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "673758a7b1234567890abcde",
+                  "description": "ID do ingrediente"
+                }
+              ]
+            },
+            "description": "Busca um ingrediente específico por ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Ingredient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"ingredientId\", jsonData.data._id || jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Banana\",\n  \"calories\": 89,\n  \"protein\": 1.1,\n  \"carbohydrate\": 22.8,\n  \"totalFat\": 0.3,\n  \"saturatedFat\": 0.1,\n  \"fiber\": 2.6,\n  \"sodium\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients"]
+            },
+            "description": "Cria um novo ingrediente. Valores nutricionais são por 100g."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Ingredient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"calories\": 90,\n  \"protein\": 1.2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{ingredientId}}",
+                  "description": "ID do ingrediente"
+                }
+              ]
+            },
+            "description": "Atualiza um ingrediente existente. Apenas o dono ou admin pode atualizar."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ingredient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{ingredientId}}",
+                  "description": "ID do ingrediente"
+                }
+              ]
+            },
+            "description": "Deleta um ingrediente. Apenas o dono ou admin pode deletar."
+          },
+          "response": []
+        },
+        {
+          "name": "Get by Calories Range",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients/calories-range?min=50&max=100",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients", "calories-range"],
+              "query": [
+                {
+                  "key": "min",
+                  "value": "50",
+                  "description": "Calorias mínimas"
+                },
+                {
+                  "key": "max",
+                  "value": "100",
+                  "description": "Calorias máximas"
+                }
+              ]
+            },
+            "description": "Busca ingredientes por faixa de calorias."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints para gerenciamento de ingredientes"
+    },
+    {
+      "name": "Recipes",
+      "item": [
+        {
+          "name": "List All Recipes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes?page=1&limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Número da página"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Itens por página"
+                },
+                {
+                  "key": "sort",
+                  "value": "-createdAt",
+                  "description": "Ordenação",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Lista todas as receitas com paginação."
+          },
+          "response": []
+        },
+        {
+          "name": "List My Recipes",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", "me"]
+            },
+            "description": "Lista apenas as receitas criadas pelo usuário autenticado."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Recipe by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "673758a7b1234567890abcdf",
+                  "description": "ID da receita"
+                }
+              ]
+            },
+            "description": "Busca uma receita específica por ID com informações nutricionais calculadas."
+          },
+          "response": []
+        },
+        {
+          "name": "Create Recipe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.environment.set(\"recipeId\", jsonData.data._id || jsonData.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vitamina de Banana\",\n  \"description\": \"Vitamina saudável e nutritiva\",\n  \"ingredients\": [\n    {\n      \"ingredientId\": \"{{ingredientId}}\",\n      \"measure\": 100\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes"]
+            },
+            "description": "Cria uma nova receita. Os valores nutricionais são calculados automaticamente baseados nos ingredientes."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Recipe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vitamina de Banana com Aveia\",\n  \"description\": \"Vitamina ainda mais nutritiva\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recipeId}}",
+                  "description": "ID da receita"
+                }
+              ]
+            },
+            "description": "Atualiza uma receita existente. Apenas o dono ou admin pode atualizar."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Recipe",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/recipes/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "recipes", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{recipeId}}",
+                  "description": "ID da receita"
+                }
+              ]
+            },
+            "description": "Deleta uma receita. Apenas o dono ou admin pode deletar."
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints para gerenciamento de receitas"
+    },
+    {
+      "name": "Examples - Advanced Usage",
+      "item": [
+        {
+          "name": "Ingredients - Sorted by Calories DESC",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients?sort=-calories&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients"],
+              "query": [
+                {
+                  "key": "sort",
+                  "value": "-calories"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Lista ingredientes ordenados por calorias (maior para menor)."
+          },
+          "response": []
+        },
+        {
+          "name": "Ingredients - Select Specific Fields",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients?fields=name,calories,protein",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients"],
+              "query": [
+                {
+                  "key": "fields",
+                  "value": "name,calories,protein"
+                }
+              ]
+            },
+            "description": "Retorna apenas os campos especificados (otimização de performance)."
+          },
+          "response": []
+        },
+        {
+          "name": "Ingredients - Combined Filters",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/ingredients?page=1&limit=10&sort=-calories&fields=name,calories,protein",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "ingredients"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "sort",
+                  "value": "-calories"
+                },
+                {
+                  "key": "fields",
+                  "value": "name,calories,protein"
+                }
+              ]
+            },
+            "description": "Exemplo combinando paginação, ordenação e seleção de campos."
+          },
+          "response": []
+        }
+      ],
+      "description": "Exemplos de uso avançado com filtros, ordenação e paginação"
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}
