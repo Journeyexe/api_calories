@@ -9,12 +9,8 @@ export const registerValidator = [
     .withMessage("Nome deve ter entre 2 e 50 caracteres"),
   body("email").trim().normalizeEmail().isEmail().withMessage("Email inválido"),
   body("password")
-    .isLength({ min: 8 })
-    .withMessage("Senha deve ter no mínimo 8 caracteres")
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
-    .withMessage(
-      "Senha deve conter: maiúscula, minúscula, número e caractere especial"
-    ),
+    .isLength({ min: 6 })
+    .withMessage("Senha deve ter no mínimo 6 caracteres"),
 ];
 
 export const loginValidator = [
