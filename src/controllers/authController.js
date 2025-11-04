@@ -21,7 +21,7 @@ export const authController = {
   async register(req, res, next) {
     try {
       const { name, email, password } = req.body;
-
+      
       const user = await User.create({
         name,
         email,
@@ -29,9 +29,9 @@ export const authController = {
       });
 
       const token = generateToken(user._id);
-
+      
       res.cookie("jwt", token, cookieOptions);
-
+      
       res.status(201).json({
         success: true,
         data: {
@@ -56,37 +56,20 @@ export const authController = {
   async login(req, res, next) {
     try {
       const { email, password } = req.body;
-
-      logger.info(`Tentativa de login para email: ${email}`);
-
+      
       const user = await User.findOne({ email }).select("+password");
-
-      if (!user) {
-        logger.warn(`Usuário não encontrado: ${email}`);
+      
+      if (!user || !(await user.comparePassword(password))) {
         return res.status(401).json({
           success: false,
           error: "Credenciais inválidas",
         });
       }
-
-      logger.info(`Usuário encontrado: ${email}, verificando senha...`);
-
-      const isPasswordValid = await user.comparePassword(password);
-
-      if (!isPasswordValid) {
-        logger.warn(`Senha inválida para usuário: ${email}`);
-        return res.status(401).json({
-          success: false,
-          error: "Credenciais inválidas",
-        });
-      }
-
-      logger.info(`Login bem-sucedido para: ${email}`);
-
+      
       const token = generateToken(user._id);
-
+      
       res.cookie("jwt", token, cookieOptions);
-
+      
       res.status(200).json({
         success: true,
         data: {
@@ -98,7 +81,6 @@ export const authController = {
         },
       });
     } catch (error) {
-      logger.error(`Erro no login: ${error.message}`);
       next(error);
     }
   },
@@ -108,7 +90,7 @@ export const authController = {
       httpOnly: true,
       expires: new Date(0),
     });
-
+    
     res.status(200).json({
       success: true,
       message: "Logout realizado com sucesso",
@@ -118,7 +100,7 @@ export const authController = {
   async getMe(req, res, next) {
     try {
       const user = await User.findById(req.user.id);
-
+      
       res.status(200).json({
         success: true,
         data: user,

@@ -50,13 +50,7 @@ userSchema.pre("save", async function (next) {
 
 // Método para comparar senhas
 userSchema.methods.comparePassword = async function (candidatePassword) {
-  try {
-    const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    return isMatch;
-  } catch (error) {
-    console.error("Erro ao comparar senhas:", error);
-    return false;
-  }
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);
