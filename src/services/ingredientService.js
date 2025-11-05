@@ -64,7 +64,10 @@ export class IngredientService {
       throw new NotFoundError("Ingrediente");
     }
 
-    return ingredient;
+    return {
+      ...ingredient.toObject({ virtuals: true }),
+      nutritionSummary: ingredient.getNutritionSummary(),
+    };
   }
 
   async deleteIngredient(id) {

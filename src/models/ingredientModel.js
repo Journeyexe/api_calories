@@ -83,6 +83,96 @@ ingredientSchema.virtual("caloriesFromFat").get(function () {
   return this.totalFat * 9; // 9 calories per gram of fat
 });
 
+// Helper function to recalculate recipes using this ingredient
+async function recalculateRecipes(ingredientId) {
+  const Recipe = mongoose.model("Recipe");
+
+  // Encontrar todas as receitas que usam este ingrediente
+  const recipes = await Recipe.find({
+    "ingredients.ingredientId": ingredientId,
+  });
+
+  if (recipes.length === 0) {
+    console.log(
+      `[Ingredient Update] Nenhuma receita encontrada usando o ingrediente ${ingredientId}`
+    );
+    return;
+  }
+
+  console.log(
+    `[Ingredient Update] Recalculando ${recipes.length} receita(s) que usam o ingrediente ${ingredientId}`
+  );
+
+  // Recalcular cada receita
+  for (const recipe of recipes) {
+    const Ingredient = mongoose.model("Ingredient");
+
+    let totalRecipeWeight = 0;
+    let totalCalories = 0;
+    let totalCarbohydrate = 0;
+    let totalProtein = 0;
+    let totalFat = 0;
+    let totalSaturatedFat = 0;
+    let totalFiber = 0;
+    let totalSodium = 0;
+
+    for (const ingredient of recipe.ingredients) {
+      const ingredientData = await Ingredient.findById(ingredient.ingredientId);
+      if (ingredientData) {
+        const measureFactor = ingredient.measure / 100;
+        totalRecipeWeight += ingredient.measure;
+        totalCalories += ingredientData.calories * measureFactor;
+        totalCarbohydrate += ingredientData.carbohydrate * measureFactor;
+        totalProtein += ingredientData.protein * measureFactor;
+        totalFat += ingredientData.totalFat * measureFactor;
+        totalSaturatedFat += ingredientData.saturatedFat * measureFactor;
+        totalFiber += ingredientData.fiber * measureFactor;
+        totalSodium += ingredientData.sodium * measureFactor;
+      }
+    }
+
+    // Atualizar a receita sem disparar hooks (para evitar loop infinito)
+    await Recipe.updateOne(
+      { _id: recipe._id },
+      {
+        $set: {
+          recipeWeight: totalRecipeWeight,
+          calories: totalCalories,
+          carbohydrate: totalCarbohydrate,
+          protein: totalProtein,
+          totalFat: totalFat,
+          saturatedFat: totalSaturatedFat,
+          fiber: totalFiber,
+          sodium: totalSodium,
+        },
+      }
+    );
+
+    console.log(
+      `[Ingredient Update] Receita "${recipe.name}" recalculada. Calorias: ${recipe.calories} → ${totalCalories}`
+    );
+  }
+
+  console.log(
+    `[Ingredient Update] Recálculo concluído para ${recipes.length} receita(s)`
+  );
+}
+
+// Post-save hook to recalculate recipes when ingredient is updated
+ingredientSchema.post("save", async function (doc) {
+  // Se este é um update (não é novo), recalcular receitas
+  if (!doc.isNew) {
+    await recalculateRecipes(doc._id);
+  }
+});
+
+// Post-update hook to recalculate recipes when ingredient is updated
+ingredientSchema.post("findOneAndUpdate", async function (doc) {
+  if (doc) {
+    await recalculateRecipes(doc._id);
+  }
+});
+
 const Ingredient = mongoose.model("Ingredient", ingredientSchema);
 
 export default Ingredient;
